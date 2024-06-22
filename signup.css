@@ -1,0 +1,63 @@
+.section {
+	position: relative;
+	height: 100vh;
+}
+
+.section .section-center {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	right: 0;
+	-webkit-transform: translateY(-50%);
+	transform: translateY(-50%);
+}
+
+#booking {
+	font-family: 'Montserrat', sans-serif;
+	background-image: url('../img/background.jpg');
+	background-size: cover;
+	background-position: center;
+}
+
+#booking::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	top: 0;
+	background: rgba(47, 103, 177, 0.6);
+}
+
+
+.booking-cta {
+	margin-top: 10px !important;
+	margin-bottom: 30px;
+}
+
+.booking-cta h1 {
+	font-size: 52px;
+	text-transform: uppercase;
+	color: #fff;
+	font-weight: 700;
+}
+
+.booking-cta p {
+	font-size: 16px;
+	color: rgba(255, 255, 255, 0.8) ;
+}
+
+
+#buttons-images {
+    display: flex;
+    justify-content: space-between;
+}
+#buttons-images .role-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#buttons-images .role-container button, 
+#buttons-images .role-container img {
+    margin-bottom: 20px;
+}

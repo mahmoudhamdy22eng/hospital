@@ -1,0 +1,62 @@
+
+
+/* .section .section-center {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	right: 0;
+	-webkit-transform: translateY(-50%);
+	transform: translateY(-50%);
+} */
+
+body{
+	font-family: 'Montserrat', sans-serif;
+	background-image: url('img/background1.jpg');
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	min-height: 100vh;
+}
+#booking {
+	font-family: 'Montserrat', sans-serif;
+	
+}
+
+.booking-form {
+    background-color: #fff;
+    padding: 20px 5px;
+    -webkit-box-shadow: 0px 5px 20px -5px rgb(0 0 0 / 30%);
+    box-shadow: 0px 5px 20px -5px rgb(0 0 0 / 30%);
+    border-radius: 4px;
+}
+
+#booking::before {
+	content: '';
+	position: absolute; 
+	left: 0;
+	right: 0;
+	bottom: 0;
+	top: 0;
+	background: rgba(47, 103, 177, 0.6);
+}
+
+
+.booking-cta {
+	margin-top: 10px !important;
+	margin-bottom: 10px;
+}
+
+.booking-cta h1 {
+	font-size: 52px;
+	text-transform: uppercase;
+	color: #fff;
+	font-weight: 700;
+}
+
+.booking-cta h5 {
+	font-size: 16px;
+	color: rgba(255, 255, 255, 0.8) ;
+}
+
+
+
