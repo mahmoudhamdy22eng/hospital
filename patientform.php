@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -63,12 +66,12 @@
                                     <div class="col-sm-6 form-group form-inline">
                                         <label class="form-label mr-2">Gender : </label>
                                         <div class="form-check form-check-inline">
-                                            <input type="radio" name="gender" id="male" value="male" 
+                                            <input type="radio" name="gender" id="male" value="1" 
                                                     class="form-check-input" required>
                                             <label class="form-check-label" for="male"> Male</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input type="radio" name="gender" id="female" value="female" 
+                                            <input type="radio" name="gender" id="female" value="2" 
                                                     class="form-check-input" required>
                                             <label class="form-check-label" for="female"> Female</label>
                                         </div>
@@ -166,6 +169,7 @@
 
     <script>
 
+
 // Show/Hide doctors
         function filterDoctors() {
             const illness = document.getElementById("illness").value;
@@ -241,6 +245,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $phone = htmlspecialchars($_POST['phone']);
         $username = htmlspecialchars($_POST['UserName']);
         $password = htmlspecialchars($_POST['Password']);
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         $confirmPassword = htmlspecialchars($_POST['confirmPassword']);
         $terms = isset($_POST['terms']);
 
@@ -345,85 +350,91 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
 
         // if uploadstatus is ok >>> try to upload file
-        else{
-            if ($conn) {
+else{
+    if ($conn) {
 // Insert the form data into the database
         // to user table
-                try {
-                    $insertUser = "INSERT INTO user (user_name, user_pass, u_type_no) 
-                                        VALUES (:username, :pass, :ispatient)";
-                    $stmt = $conn->prepare($insertUser);
-                    $stmt->bindParam(':username', $username);
-                    $stmt->bindParam(':pass', $password);
-                    $stmt->bindParam(':ispatient', $ispatient);
-                
-                    $stmt->execute();
-                    $last_id = $conn->lastInsertId();
-                    // UPDATE patient SET patient_user_no = :last_id
-                    $updatePatient = "UPDATE patient SET patient_user_no = :last_id WHERE patient_user_no IS NULL";
-                    $stmt = $conn->prepare($updatePatient);
-                    $stmt->bindParam(':last_id', $last_id, PDO::PARAM_INT);
-                
-                    $stmt->execute();
+            try {
+                $insertQuery = "INSERT INTO user (user_name, user_pass, u_type_no) 
+                                    VALUES (:username, :pass, :isPatient)";
+                $stmt = $conn->prepare($insertQuery);
+                $stmt->bindValue(':username', $username);
+                $stmt->bindValue(':pass', $hashed_password);
+                $stmt->bindValue(':isPatient', $isPatient);
 
-                // echo "Data inserted and updated successfully.";
-                } catch(PDOException $e) {
-                    echo "Error: " . $e->getMessage();
-                }
+                $stmt->execute();
+                $last_id = $conn->lastInsertId();
+                // UPDATE patient SET patient_user_no = :last_id
+                $updatePatient = "UPDATE patient SET patient_user_no = :last_id WHERE patient_user_no IS NULL";
+                $stmt = $conn->prepare($updatePatient);
+                $stmt->bindValue(':last_id', $last_id, PDO::PARAM_INT);
+
+                $stmt->execute();
+
+            } catch(PDOException $e) {
+                echo "Error: " . $e->getMessage();
+            }
 
         // to patient table
                 try {
+                    $insertPatient = "INSERT INTO patient (patient_name, patient_img, patient_phone, patient_dep_no,
+                                        patient_gender, patient_user_no, patient_doc_no)
+                                    VALUES (:fullname, :profileImage, :phone, :illness, 
+                                            :gender, :user_id, :patient_doc_no)";
+                    $stmt = $conn->prepare($insertPatient);
                     
-                    $insertQuery = "INSERT INTO patient (patient_name, patient_img, patient_phone, patient_dep_no,
-                                                            patient_gender, patient_user_no)
-                                    values (concat(:fname, ' ', :lname), :profileImage, :phone, :department, 
-                                                            :gender, :user_id) ";
-                    $stmt = $conn->prepare($insertQuery);
-                    $stmt->bindParam(':fname', $fname);
-                    $stmt->bindParam(':lname', $lname);
-                    $stmt->bindParam(':profileImage', $target_file);
-                    $stmt->bindParam(':phone', $phone);
-                    $stmt->bindParam(':department', $illness);
-                    $stmt->bindParam(':gender', $gender);
-                    $stmt->bindParam(':user_id', $last_id);
-                
-                    $stmt->execute();
+                    $fullname = $_POST['fname'] . ' ' . $_POST['lname'];
+                    $stmt->bindValue(':fullname', $fullname);
+                    $stmt->bindValue(':profileImage', $target_file);
+                    $stmt->bindValue(':phone', $phone);
+                    $stmt->bindValue(':illness', $illness);
+                    $stmt->bindValue(':gender', $gender);
+                    $stmt->bindValue(':user_id', $last_id);
+                    $stmt->bindValue(':patient_doc_no', $doctor_id);
 
-                    $last_id = $conn->lastInsertId();
-                    // UPDATE doc_pat SET rel_patient = :last_id
-                    $updatedoc_pat = "UPDATE doc_pat SET rel_patient = :last_id WHERE rel_patient IS NULL";
-                    $stmt = $conn->prepare($updatedoc_pat);
-                    $stmt->bindParam(':last_id', $last_id, PDO::PARAM_INT);
-                
                     $stmt->execute();
-                    // echo "Data inserted successfully.";
+                    $last_id = $conn->lastInsertId();                           
+                    // Update doc_pat table
+                    $updateDocPat = "UPDATE doc_pat SET rel_patient = :last_id 
+                                                    WHERE rel_patient IS NULL AND rel_doctor = :last_illness";
+                    $stmt = $conn->prepare($updateDocPat);
+                    $stmt->bindValue(':last_id', $last_id, PDO::PARAM_INT);
+                    $stmt->bindValue(':last_illness', $doctor_id, PDO::PARAM_INT);
+                    $stmt->execute();
+                    move_uploaded_file($_FILES["file"]["tmp_name"], $target_file);
+                    
+                    // Redirect to another page after successful execution
+                    echo '<script>window.location.href = "success.php";</script>';
+                    exit();
+                    
                 } catch(PDOException $e) {
                     echo "Error: " . $e->getMessage();
                 }
+            
 
         // to doc_pat table
-                try{
+                // try{
                     // $select = "SELECT doctor_id FROM doctor";
                     // $result = $conn->query($select);
                     // $doctor_id = $row['doctor_id'];
 
-                    $insertQuery = "INSERT INTO doc_pat (rel_doctor)
-                                    values (:doc_no)";
-                    $stmt = $conn->prepare($insertQuery);
+                //     $insertQuery = "INSERT INTO doc_pat (rel_doctor)
+                //                     values (:doc_no)";
+                //     $stmt = $conn->prepare($insertQuery);
 
-                    $stmt->bindParam(':doc_no',$doctor_id);
-                    // $stmt->bindParam(':pat_no',$);
+                //     $stmt->bindParam(':doc_no',$doctor_id);
+                //     // $stmt->bindParam(':pat_no',$);
 
-                    move_uploaded_file($_FILES["file"]["tmp_name"], $target_file);
-                    // Redirect to another page
-                    echo '<script>window.location.href = "success.php";</script>';
+                //     move_uploaded_file($_FILES["file"]["tmp_name"], $target_file);
+                //     // Redirect to another page
+                //     echo '<script>window.location.href = "success.php";</script>';
 
-                    $stmt->execute();
-                    // echo "Data inserted successfully.";
+                //     $stmt->execute();
+                //     // echo "Data inserted successfully.";
 
-                } catch(PDOException $e) {
-                    echo "Error: " . $e->getMessage();
-                }
+                // } catch(PDOException $e) {
+                //     echo "Error: " . $e->getMessage();
+                // }
 
         
                 

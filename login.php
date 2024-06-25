@@ -1,3 +1,9 @@
+<?php
+session_start();
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -48,8 +54,8 @@
                             <!-- Image -->
 							<div class="form-group text-center">
 								<!-- <label for="file" class="form-label"><b>Upload Your Profile Image</b></label><br> -->
-								<img src="img/logo2.png" 
-                                	alt="Profile Image" id="profileimg" width="300" height="180"><br>
+								<img src="img/health.png" 
+                                	alt="Profile Image" id="profileimg" width="200" height="180"><br>
 							</div>
 							<!-- Username -->
 							<div class="col-sm-8 form-group container">
@@ -104,8 +110,6 @@
 <!-- php -->
 <?php  
 
-session_start();
-
 // Connect to database 
     $dsn = 'mysql:dbname=hospital;host=127.0.0.1;port=3306';
     $user = 'root';
@@ -122,7 +126,6 @@ try {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
         $uploadstatus = 1;
         // Form data
         $username = htmlspecialchars($_POST['UserName']);
@@ -167,16 +170,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	// Username exists, fetch user data
 	if ($checkUsername->rowCount() > 0) {
 		$userData = $checkUsername->fetch(PDO::FETCH_ASSOC);
-		$hashed_password = $userData['user_pass'];
+		// $hashed_password = $userData['user_pass'];
 
 		// Hashed password from database
-	// 	$hashed_password_from_db = $userData['user_pass'];
+		$hashed_password_from_db = $userData['user_pass'];
 	// echo "Hashed Password from Database: " . $hashed_password_from_db . "<br>";
-
-		// Verify password
-		if ($password === $hashed_password) {
-			$_SESSION['username'] = $userData['user_name'];
-			$_SESSION['user_id'] = $userData['user_id']; 
+	
+		
+		if (password_verify($password, $hashed_password_from_db)) {
+			// Set session variables and other logic here
+			$_SESSION['user_name'] = $userData['user_name'];
+			$_SESSION['user_id'] = $userData['user_id'];
 			$_SESSION['u_type_no'] = $userData['u_type_no'];
 		
 			// doctor table
@@ -184,24 +188,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 			$doctortable->bindParam(':user_id', $userData['user_id']);
 			$doctortable->execute();
 			$doctordata = $doctortable->fetch(PDO::FETCH_ASSOC);
-			$_SESSION['doctor_id'] = $doctordata['doctor_id'];
-			$_SESSION['doctor_name'] = $doctordata['doctor_name'];
-			$_SESSION['doctor_img'] = $doctordata['doctor_img'];
-			$_SESSION['doctor_phone'] = $doctordata['doctor_phone'];
-			$_SESSION['doctor_dep_no'] = $doctordata['doctor_dep_no'];
-			$_SESSION['doc_schedule_start'] = $doctordata['doc_schedule_start'];
-			$_SESSION['doc_schedule_end'] = $doctordata['doc_schedule_end'];
-		
+			if ($doctordata) {
+				$_SESSION['doctor_id'] = $doctordata['doctor_id'];
+				$_SESSION['doctor_name'] = $doctordata['doctor_name'];
+				$_SESSION['doctor_img'] = $doctordata['doctor_img'];
+				$_SESSION['doctor_phone'] = $doctordata['doctor_phone'];
+				$_SESSION['doctor_dep_no'] = $doctordata['doctor_dep_no'];
+				$_SESSION['doc_schedule_start'] = $doctordata['doc_schedule_start'];
+				$_SESSION['doc_schedule_end'] = $doctordata['doc_schedule_end'];
+			}
 			// patient table
-			// $patienttable = $conn->prepare("SELECT * FROM patient WHERE patient_user_no = :user_id");
-			// $patienttable->bindParam(':user_id', $userData['user_id']);
-			// $patienttable->execute();
-			// $patientdata = $patienttable->fetch(PDO::FETCH_ASSOC);
-			// $_SESSION['patient_id'] = $patientdata['patient_id'];
-			// $_SESSION['patient_name'] = $patientdata['patient_name'];
-			// $_SESSION['patient_img'] = $patientdata['patient_img'];
-			// $_SESSION['patient_phone'] = $patientdata['patient_phone'];
-			// $_SESSION['patient_dep_no'] = $patientdata['patient_dep_no'];
+			$patienttable = $conn->prepare("SELECT * FROM patient WHERE patient_user_no = :user_id");
+			$patienttable->bindParam(':user_id', $userData['user_id']);
+			$patienttable->execute();
+			$patientdata = $patienttable->fetch(PDO::FETCH_ASSOC);
+			if ($patientdata) {
+				$_SESSION['patient_id'] = $patientdata['patient_id'];
+				$_SESSION['patient_name'] = $patientdata['patient_name'];
+				$_SESSION['patient_img'] = $patientdata['patient_img'];
+				$_SESSION['patient_phone'] = $patientdata['patient_phone'];
+				$_SESSION['patient_dep_no'] = $patientdata['patient_dep_no'];
+				$_SESSION['patient_doc_no'] = $patientdata['patient_doc_no'];
+			}
 
 			// department table
 			// $departmenttable = $conn->prepare("SELECT * FROM user WHERE u_dep_no = :user_id");
@@ -274,7 +282,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // if uploadstatus is ok >>> try to upload file
         else{
 
-                echo '<script>window.location.href = "successlogin.php";</script>';
+                echo '<script>window.location.href = "profile.php";</script>';
             } 
 }
 

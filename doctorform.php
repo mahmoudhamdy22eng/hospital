@@ -286,6 +286,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $phone = htmlspecialchars($_POST['phone']);
         $username = htmlspecialchars($_POST['UserName']);
         $password = htmlspecialchars($_POST['Password']);
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         $confirmPassword = htmlspecialchars($_POST['confirmPassword']);
         $terms = isset($_POST['terms']);
     
@@ -413,7 +414,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         VALUES (:username, :pass, :isDoctor)";
                     $stmt = $conn->prepare($insertQuery);
                     $stmt->bindParam(':username', $username);
-                    $stmt->bindParam(':pass', $password);
+                    $stmt->bindParam(':pass', $hashed_password);
                     $stmt->bindParam(':isDoctor', $isDoctor);
                 
                     $stmt->execute();

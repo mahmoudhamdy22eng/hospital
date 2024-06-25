@@ -57,13 +57,16 @@
         function redirectToLogin() {
             window.location.href = 'login.php';
         }
-        function reload() {
-            window.location.reload();
-        }
+
+        // move the cursor to the button
+        document.body.addEventListener('click', function() {
+        var lonelyButton = $('#exampleModal').modal('show');
+        lonelyButton.focus();
+        });
     </script>
 </head>
 
-<body onclick="reload()">
+<body>
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel">
         <div class="modal-dialog">
